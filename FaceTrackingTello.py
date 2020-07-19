@@ -27,6 +27,9 @@ while True:
 
     # STEP 1
     img = telloGetFrame(myDrone, w, h)
+    # STEP 2
+    img, info = findFace(img)
+    print(info[0][0])
 
     # DISPLAY IMAGE
     cv2.putText(img, "Battery:{} UPDATE {}".format(battery(myDrone), str(
