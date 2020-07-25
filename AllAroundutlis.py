@@ -49,19 +49,39 @@ def findFace(img):
         return img, [[0, 0, ], 0]
 
 
-def trackFace(myDrone, info, w, pid, pError):
+def trackFace(myDrone, info, w, h, pid, pError):
 
-    # PID
-    error = info[0][0] - w//2
-    speedYaw = pid[0]*error + pid[1]*(error-pError)
-    speedYaw = int(np.clip(speed, -100, 100))
+    # PID yaw
+    errorYaw = info[0][0] - w//2
+    speedYaw = pid[0]*errorYaw + pid[1]*(errorYaw-pError[0])
+    speedYaw = int(np.clip(speedYaw, -100, 100))
     # print(speed)
 
-    
+    # PID up
+    errorUp = info[0][1] - h//2
+    # print("upround:",errorUp)
+    speedUp = pid[0]*errorUp + pid[1]*(errorUp-pError[1])
+    speedUp = -int(np.clip(speedUp, -100, 100))
+    # print("up:",errorUp,speedUp)
+
+    # PID for_back
+    errorFor = info[1] - 5000
+    if errorFor > 0:
+        speedFor = -30
+    elif errorFor < 0:
+        speedFor = 10
+    else:
+        speedFor = 0
+    # print("Forround:",errorFor)
+    # speedFor = pid[0]*errorFor + pid[1]*(errorFor-pError[2])
+    # speedFor = -int(np.clip(speedFor, -100, 100))
+    print("for_back:", errorFor, speedFor)
+
     if info[0][0] != 0:
         myDrone.yaw_velocity = speedYaw
-        # myDrone.for_back_velocity = speedFor
-     
+        myDrone.for_back_velocity = speedFor
+        myDrone.up_down_velocity = speedUp
+        error = [errorYaw, errorUp, errorFor]
 
         # state = "yaw_following"
     else:
@@ -69,7 +89,7 @@ def trackFace(myDrone, info, w, pid, pError):
         myDrone.left_right_velocity = 0
         myDrone.up_down_velocity = 0
         myDrone.yaw_velocity = 0
-        error = 0
+        error = [0, 0, 0]
         # state = "unlock"
     if myDrone.send_rc_control:
         myDrone.send_rc_control(myDrone.left_right_velocity,
